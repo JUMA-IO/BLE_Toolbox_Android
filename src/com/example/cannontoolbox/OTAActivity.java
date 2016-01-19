@@ -1,6 +1,5 @@
 package com.example.cannontoolbox;
 
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -13,37 +12,32 @@ import com.juma.sdk.ScanHelper.ScanCallback;
 import android.os.Bundle;
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.graphics.BitmapFactory;
 import android.view.Menu;
 import android.view.View;
 import android.view.Window;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.ImageView;
+import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TableRow;
-import android.widget.TextView;
 import android.widget.Toast;
 
-public class Barometer extends Activity {
+public class OTAActivity extends Activity {
 
 	private Spinner sp;
 	private TableRow tb;
-	private TextView tp,tc,tm;
-	DecimalFormat df;
+	private EditText ed;
+	private boolean otamode = false;
 	private boolean back = false;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
-		setContentView(R.layout.activity_barometer);
-		df   = new DecimalFormat("######0.00");  
+		setContentView(R.layout.activity_ota);
 		sp = (Spinner)findViewById(R.id.spinner1);
 		tb = (TableRow)findViewById(R.id.tableRow1);
-		tp = (TextView)findViewById(R.id.tp);
-		tc = (TextView)findViewById(R.id.tc);
-		tm = (TextView)findViewById(R.id.tm);
+		ed = (EditText)findViewById(R.id.editText1);
 		tb.setOnClickListener(new OnClickListener() {
 			
 			@Override
@@ -53,15 +47,15 @@ public class Barometer extends Activity {
 			}
 		});
 		setSpinner();
-		
 	}
+
 	 @Override
 	    protected void onStop() {
 	        super.onStop();
 	        back = true;
 			// TODO Auto-generated method stub
 			if(myDevice != null && myDevice.isConnected()){
-				myDevice.send((byte)0x01, CannonToolbox.hexToByte("00"));
+				myDevice.send((byte)0x01, CannonToolboxActivity.hexToByte("00"));
 				myDevice.disconnect();
 			}
 			if(scanner.isScanning()){
@@ -72,7 +66,6 @@ public class Barometer extends Activity {
 
 	 private ScanHelper scanner;
 		private JumaDevice myDevice;
-		private boolean redata = true;
 		private List<JumaDevice> deviceList = new ArrayList<JumaDevice>();
 		private List<UUID> uuidList = new ArrayList<UUID>();
 		private List<String> NameList = new ArrayList<String>();
@@ -84,74 +77,55 @@ public class Barometer extends Activity {
 				// TODO Auto-generated method stub
 				super.onConnectionStateChange(status, newState);
 				if(newState == JumaDevice.STATE_CONNECTED && status == JumaDevice.SUCCESS){
-					myDevice.send((byte)0x01, CannonToolbox.hexToByte("02"));
 					runOnUiThread(new Runnable(){
 
 						@Override
 						public void run() {
 							// TODO Auto-generated method stub
 							Toast.makeText(getApplicationContext(), "Connected", Toast.LENGTH_SHORT).show();
+							ed.setEnabled(false);
+						
 						}});
+					if(myDevice.setOtaMode()&&!otamode){
+						otamode = true;
+						//myDevice.disconnect();
+					}else if(otamode){
+						myDevice.updateFirmware(ed.getText().toString());
+					}
+				
 					
 				}else if (newState == JumaDevice.STATE_DISCONNECTED){
-					myDevice = null; 
-					runOnUiThread(new Runnable(){
-
-						@Override
-						public void run() {
-							// TODO Auto-generated method stub
-							Toast.makeText(getApplicationContext(), "Disconnected", Toast.LENGTH_SHORT).show();
-							uuidList.clear();
-							deviceList.clear();
-							NameList.clear();
-							apName.clear();
-							apName.add("Choose Device");
-							sp.setAdapter(apName);	
-							if(!back){
-							scanner.startScan(null);
-							}else{
-								finish();
-							}
-						}});
-				}
-				}
-			private int x = 0,y = 0;
-			double t = 0,p = 0,h = 0;
-			@Override
-			public void onReceive(byte type, byte[] message) {
-				// TODO Auto-generated method stub
-				super.onReceive(type, message);
-				if(redata){
-					redata = false;
-						x = 0;
-						x |= message[0];
-						x <<= 8;
-						x |= (message[1]&0x00FF);
-						x <<= 8;
-						x |= (message[2]&0x0000FF);
-						y = 0;
-						y |= message[3];
-						y <<= 8;
-						y |= (message[4]&0x00FF);
-						t = (double)y/100;
-						p = (double)x/100;
-						h = 18400*(1+t/273)*Math.log10(1027/p);
-						
-						
+					if(!back){
+						myDevice = null; 
 						runOnUiThread(new Runnable(){
 
 							@Override
 							public void run() {
 								// TODO Auto-generated method stub
-								tp.setText(p+"hPa");
-								tc.setText(t+"¡æ");
-								tm.setText(df.format(h)+"m");
-								redata = true;
+								Toast.makeText(getApplicationContext(), "Disconnected", Toast.LENGTH_SHORT).show();
+								uuidList.clear();
+								deviceList.clear();
+								NameList.clear();
+								apName.clear();
+								apName.add("Choose Device");
+								sp.setAdapter(apName);	
+								scanner.startScan(null);
 							}});
-				}
-				
+						}else{
+							finish();
+						}
+					}
 			}
-		
+			@Override
+			public void onUpdateFirmware(int status) {
+				// TODO Auto-generated method stub
+				super.onUpdateFirmware(status);
+				if(status == JumaDevice.SUCCESS){
+					otamode = false;
+				}
+				myDevice.disconnect();
+			}
+			
 		};
 		private ScanCallback scancallback = new ScanCallback() {
 			
@@ -167,7 +141,12 @@ public class Barometer extends Activity {
 			@Override
 			public void onDiscover(JumaDevice device, int arg1) {
 				// TODO Auto-generated method stub
-				if(!uuidList.contains(device.getUuid())){
+				if(otamode){
+					if(device.getName().equals("OTA Mode")){
+						myDevice = device;
+						myDevice.connect(callback);
+				}
+				}else if(!uuidList.contains(device.getUuid())){
 					uuidList.add(device.getUuid());
 					deviceList.add(device);
 					NameList.add(device.getName());
@@ -199,7 +178,7 @@ public class Barometer extends Activity {
 				public void onItemSelected(AdapterView<?> parent, View view,
 						int position, long id) {
 					if(myDevice != null && myDevice.isConnected()){
-						myDevice.send((byte)0x01, CannonToolbox.hexToByte("00"));
+						myDevice.send((byte)0x01, CannonToolboxActivity.hexToByte("00"));
 						myDevice.disconnect();
 					}else if(!apName.getItem(position).equals("Choose Device")){
 					myDevice = deviceList.get(position-1);

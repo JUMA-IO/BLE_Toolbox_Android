@@ -112,7 +112,7 @@ public class RBGActivity extends Activity {
 			// TODO Auto-generated method stub
 			super.onConnectionStateChange(status, newState);
 			if(newState == JumaDevice.STATE_CONNECTED && status == JumaDevice.SUCCESS){
-				myDevice.send((byte)0x01, CannonToolbox.hexToByte((myDevice.getName().equals("RGB_Light")?"00":"01")));
+				myDevice.send((byte)0x01, CannonToolboxActivity.hexToByte((myDevice.getName().equals("RGB_Light")?"00":"01")));
 				runOnUiThread(new Runnable(){
 
 					@Override
@@ -179,7 +179,7 @@ public class RBGActivity extends Activity {
 								x = ((ax < 16) ? ("0"+((ax<0) ? "0":Integer.toHexString(ax))) : ((ax<255) ? Integer.toHexString(ax):"FF"));
 								y = ((ay < 16) ? ("0"+((ay<0) ? "0":Integer.toHexString(ay))) : ((ay<255) ? Integer.toHexString(ay):"FF"));
 								z = ((az < 16) ? ("0"+((az<0) ? "0":Integer.toHexString(az))) : ((az<255) ? Integer.toHexString(az):"FF"));
-								cDevice.send((byte)0x00, CannonToolbox.hexToByte("01"+x+y+z));
+								cDevice.send((byte)0x00, CannonToolboxActivity.hexToByte("01"+x+y+z));
 							}
 							redata = true;
 						}
@@ -277,7 +277,7 @@ public class RBGActivity extends Activity {
 			public void onItemSelected(AdapterView<?> parent, View view,
 					int position, long id) {
 				if(myDevice != null && cDevice != null){
-					myDevice.send((byte)0x01, CannonToolbox.hexToByte("00"));
+					myDevice.send((byte)0x01, CannonToolboxActivity.hexToByte("00"));
 					myDevice.disconnect();
 				}else if(!apName.getItem(position).equals("Choose Device")){
 					if(myDevice == null){
@@ -302,7 +302,7 @@ public class RBGActivity extends Activity {
 	        back = true;
 			// TODO Auto-generated method stub
 			if(myDevice != null && myDevice.isConnected()){
-				myDevice.send((byte)0x01, CannonToolbox.hexToByte("00"));
+				myDevice.send((byte)0x01, CannonToolboxActivity.hexToByte("00"));
 				myDevice.disconnect();
 			}else{
 			if(scanner.isScanning()){

@@ -4,17 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import com.example.widget.MyView;
-import com.example.widget.WaveView;
+import com.example.widget.GLImage;
+import com.example.widget.GLRender;
 import com.juma.sdk.JumaDevice;
 import com.juma.sdk.JumaDeviceCallback;
 import com.juma.sdk.ScanHelper;
 import com.juma.sdk.ScanHelper.ScanCallback;
 
+import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.graphics.Color;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
@@ -22,26 +22,26 @@ import android.view.Window;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TableRow;
 import android.widget.Toast;
 
-public class TRHActivity extends Activity {
+public class CubeActivity extends Activity {
 
 	private Spinner sp;
 	private TableRow tb;
-	private MyView myView;
-	private WaveView wv;
-	private boolean back = false;
+	GLRender render = new GLRender(this);  
+    GLSurfaceView glView;
+    private boolean back = false;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
-		setContentView(R.layout.activity_trh);
+		setContentView(R.layout.cube_activity);
 		sp = (Spinner)findViewById(R.id.spinner1);
+		setSpinner();
 		tb = (TableRow)findViewById(R.id.tableRow1);
-		myView = (MyView)findViewById(R.id.mv);
-		wv = (WaveView)findViewById(R.id.wv);
 		tb.setOnClickListener(new OnClickListener() {
 			
 			@Override
@@ -50,24 +50,12 @@ public class TRHActivity extends Activity {
 				onStop();
 			}
 		});
-		setSpinner();
-		wv.setWave(false,1.7f, 0.85f, 0.06f, 1,Color.argb(0x80, 0x36, 0xba, 0xf8), 0.5f);
+		 GLImage.load(this.getResources());
+	        glView = new GLSurfaceView(this);  
+	        glView.setRenderer(render); 
+	        LinearLayout layout1 = (LinearLayout)findViewById(R.id.ddd);
+	        layout1.addView(glView);
 	}
-	 @Override
-	    protected void onStop() {
-	        super.onStop();
-	        back = true;
-			// TODO Auto-generated method stub
-			if(myDevice != null && myDevice.isConnected()){
-				myDevice.send((byte)0x01, CannonToolbox.hexToByte("00"));
-				myDevice.disconnect();
-			}else {
-			if(scanner.isScanning()){
-				scanner.stopScan();
-			}
-			finish();
-			}
-	     }
 	private ScanHelper scanner;
 	private JumaDevice myDevice;
 	private boolean redata = true;
@@ -82,7 +70,7 @@ public class TRHActivity extends Activity {
 			// TODO Auto-generated method stub
 			super.onConnectionStateChange(status, newState);
 			if(newState == JumaDevice.STATE_CONNECTED && status == JumaDevice.SUCCESS){
-				myDevice.send((byte)0x01, CannonToolbox.hexToByte("03"));
+				myDevice.send((byte)0x01, CannonToolboxActivity.hexToByte("04"));
 				runOnUiThread(new Runnable(){
 
 					@Override
@@ -91,7 +79,7 @@ public class TRHActivity extends Activity {
 						Toast.makeText(getApplicationContext(), "Connected", Toast.LENGTH_SHORT).show();
 					}});
 				
-			}else if (newState == JumaDevice.STATE_DISCONNECTED ){
+			}else if (newState == JumaDevice.STATE_DISCONNECTED){
 				myDevice = null; 
 				runOnUiThread(new Runnable(){
 
@@ -113,32 +101,47 @@ public class TRHActivity extends Activity {
 					}});
 			}
 		}
-		private int x = 0,y = 0;
+		private int bx,by,bz;
+		private float anglex = 0f,x,y,z;  
+		private float angley = 0f;  
+		private float anglez = 0f; 
 		@Override
 		public void onReceive(byte type, byte[] message) {
 			// TODO Auto-generated method stub
 			super.onReceive(type, message);
 			if(redata){
 				redata = false;
-					x = 0;
-					x |= message[0];
-					x <<= 8;
-					x |= (message[1]&0x00FF);
-					y = 0;
-					y |= message[2];
-					y <<= 8;
-					y |= (message[3]&0x00FF);
-					runOnUiThread(new Runnable(){
-
-						@Override
-						public void run() {
-							// TODO Auto-generated method stub
-							myView.anglevalue(y/100*3);
-							
-							Log.e("ttttttttt", ":"+(float)x/10000);
-							wv.setProgress(true,(float)x/10000*1f,Color.WHITE);
-							redata = true;
-						}});
+				bx = 0;
+				by = 0;
+				bz = 0;
+				bx |= message[0];
+				bx <<= 8;
+				bx |= (message[1]&0x00FF);
+				by |= message[2];
+				by <<= 8;
+				by |= (message[3]&0x00FF);
+				bz |= message[4];
+				bz <<= 8;
+				bz |= (message[5]&0x00FF);
+					
+					x = (float)bx/1010;
+					y = (float)by/1010;
+					z = (float)bz/1010;
+					if(Math.abs(x)<=1&&Math.abs(y)<=1&&Math.abs(z)<=1){
+						anglex = -(float) ((float) Math.asin(x)*180/Math.PI);
+						angley = -(float) ((float) Math.asin(y)*180/Math.PI);
+						if(bz < 0){
+							if(Math.abs(anglex)>Math.abs(angley)){
+							anglex = 180-anglex;
+							}else{
+								angley = 180-angley;
+							}
+						}
+						render.setXYZ(anglex, angley, anglez);
+					}
+				
+					redata = true;
+				
 			}
 			
 		}
@@ -178,11 +181,10 @@ public class TRHActivity extends Activity {
 		}
 	};
 	
-	@SuppressLint("HandlerLeak")
 	public void setSpinner(){
 		apName = new ArrayAdapter<String>(this,R.layout.message);  
 		apName.add("Choose Device");
-		sp.setAdapter(apName);	
+		sp.setAdapter(apName);
 		scanner = new ScanHelper(this, scancallback);
 		sp.setOnItemSelectedListener(new Spinner.OnItemSelectedListener(){
 
@@ -190,7 +192,7 @@ public class TRHActivity extends Activity {
 			public void onItemSelected(AdapterView<?> parent, View view,
 					int position, long id) {
 				if(myDevice != null && myDevice.isConnected()){
-					myDevice.send((byte)0x01, CannonToolbox.hexToByte("00"));
+					myDevice.send((byte)0x01, CannonToolboxActivity.hexToByte("00"));
 					myDevice.disconnect();
 				}else if(!apName.getItem(position).equals("Choose Device")){
 				myDevice = deviceList.get(position-1);
@@ -206,14 +208,24 @@ public class TRHActivity extends Activity {
 			}});
 		scanner.startScan(null);
 	}
-	
-	
-
-
+	 @Override
+	    protected void onStop() {
+	        super.onStop();
+	        back = true;
+			// TODO Auto-generated method stub
+			if(myDevice != null && myDevice.isConnected()){
+				myDevice.send((byte)0x01, CannonToolboxActivity.hexToByte("00"));
+				myDevice.disconnect();
+			}
+			if(scanner.isScanning()){
+				scanner.stopScan();
+			}
+			finish();
+	     }
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.magnetometer, menu);
+		getMenuInflater().inflate(R.menu.cube_activitty, menu);
 		return true;
 	}
 

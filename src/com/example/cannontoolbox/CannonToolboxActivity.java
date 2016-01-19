@@ -14,7 +14,7 @@ import android.view.View.OnClickListener;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-public class CannonToolbox extends Activity implements OnClickListener{
+public class CannonToolboxActivity extends Activity implements OnClickListener{
 
 	private ImageView iv1,iv2,iv3,iv4,iv5,iv6;
 	private BluetoothAdapter mBluetoothAdapter;
@@ -69,22 +69,22 @@ public class CannonToolbox extends Activity implements OnClickListener{
 		Intent intent=new Intent();
 		switch(v.getId()){
 		case R.id.magnetometer:
-			intent.setClass(CannonToolbox.this, Magnetometer.class);
+			intent.setClass(CannonToolboxActivity.this, MagnetometerActivity.class);
 			break;
 		case R.id.barometer:
-			intent.setClass(CannonToolbox.this, Barometer.class);
+			intent.setClass(CannonToolboxActivity.this, BarometerActivity.class);
 			break;
 		case R.id.cube:
-			intent.setClass(CannonToolbox.this, CubeActivity.class);
+			intent.setClass(CannonToolboxActivity.this, CubeActivity.class);
 			break;
 		case R.id.car:
-			intent.setClass(CannonToolbox.this, OTAActivity.class);
+			intent.setClass(CannonToolboxActivity.this, OTAActivity.class);
 			break;
 		case R.id.rbg:
-			intent.setClass(CannonToolbox.this, RBGActivity.class);
+			intent.setClass(CannonToolboxActivity.this, RBGActivity.class);
 			break;
 		case R.id.TRH:
-			intent.setClass(CannonToolbox.this, TRHActivity.class);
+			intent.setClass(CannonToolboxActivity.this, TRHActivity.class);
 			break;
 		}
 		startActivity(intent);

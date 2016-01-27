@@ -100,7 +100,7 @@ public class MagnetometerActivity extends Activity {
 						Toast.makeText(getApplicationContext(), "Connected", Toast.LENGTH_SHORT).show();
 					}});
 				
-			}else if (newState == JumaDevice.STATE_DISCONNECTED){
+			}else{
 					myDevice = null; 
 					runOnUiThread(new Runnable(){
 

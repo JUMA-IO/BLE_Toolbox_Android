@@ -50,53 +50,6 @@ public class RBGActivity extends Activity {
 				
 		setSpinner();
 	}
-//	public void hsvtorgb(float[] colorHSV){
-//		float h,s,v,f;
-//		int r = 255,g = 255,B = 255,i,a,b,c;
-//		String r1,g1,b1;
-//		h = colorHSV[0];
-//		s = colorHSV[1];
-//		v = colorHSV[2]*255;
-//		if(s == 0){
-//			r = g = B = (int)v;
-//		}else{
-//			h /= 60;
-//			i = (int)(h);
-//			f = h-i;
-//			a = (int)(v*(1-s));
-//			b = (int)(v*(1-s*f));
-//			c = (int)(v*(1-s*(1-f)));
-//			switch(i){
-//			case 0:
-//				r = (int)v; g = c; B = a;
-//				break;
-//			case 1:
-//				r = b; g = (int)v; B = a; 
-//				break;
-//			case 2: 
-//				r = a; g =(int) v; B = c; 
-//				break;
-//			case 3: 
-//				r = a; g = b; B = (int)v;
-//				break;
-//			case 4: 
-//				r = c; g = a; B = (int)v;
-//				break;
-//			case 5: 
-//				r = (int)v; g = a; B = b;
-//				break;
-//			}
-//			
-//		}
-//		r1 = ((r < 16) ? ("0"+Integer.toHexString(r)) : Integer.toHexString(r));
-//		g1 = ((g < 16) ? ("0"+Integer.toHexString(g)) : Integer.toHexString(g));
-//		b1 = ((B < 16) ? ("0"+Integer.toHexString(B)) : Integer.toHexString(B));
-//		if(tosend){
-//			tosend = false;
-//		cDevice.send((byte)0x00, CannonToolbox.hexToByte("01"+r1+g1+b1));
-//		}
-//		
-//	}
 	private ScanHelper scanner;
 	private JumaDevice myDevice,cDevice;
 	private boolean redata = true;
@@ -120,7 +73,7 @@ public class RBGActivity extends Activity {
 						Toast.makeText(getApplicationContext(), "Connected Boss", Toast.LENGTH_SHORT).show();
 					}});
 				
-			}else if (newState == JumaDevice.STATE_DISCONNECTED ){
+			}else{
 				myDevice = null; 
 				runOnUiThread(new Runnable(){
 

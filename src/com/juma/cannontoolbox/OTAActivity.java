@@ -95,7 +95,7 @@ public class OTAActivity extends Activity {
 					}
 				
 					
-				}else if (newState == JumaDevice.STATE_DISCONNECTED){
+				}else{
 					if(!back){
 						myDevice = null; 
 						runOnUiThread(new Runnable(){
